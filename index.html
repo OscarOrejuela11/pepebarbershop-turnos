@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pepe Barber Shop · Valle Grande</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandDark: '#0a1220',
+            brandSurface: '#101c33',
+            brandCard: '#162746',
+            brandHover: '#1c3259',
+            barberRed: '#e63946',
+            barberBlue: '#1d4ed8',
+            barberBlueLight: '#60a5fa'
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            logo: ['Pacifico', 'cursive']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @keyframes marqueeSlow { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .ticker-track { display: flex; white-space: nowrap; animation: marqueeSlow 110s linear infinite; }
+    .ticker-track:hover { animation-play-state: paused; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+    .shake { animation: shake 0.3s ease-in-out; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+  </style>
+</head>
+
+<body class="bg-brandDark text-white font-sans min-h-screen flex flex-col justify-between selection:bg-barberRed selection:text-white">
+
+  <!-- TOAST ALERTA -->
+  <div id="toast" class="fixed bottom-16 left-1/2 -translate-x-1/2 bg-red-950/95 border border-red-500 text-red-200 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-2xl z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-8">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span id="toast-msg">Completa el paso obligatorio</span>
+  </div>
+
+  <!-- MODAL ÉXITO RESERVA -->
+  <div id="modal-reserva-exito" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brandSurface border border-blue-500/30 rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+      <div class="w-14 h-14 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto text-2xl">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-black uppercase text-white">¡Cita Apartada con Éxito!</h3>
+        <p class="text-xs text-slate-300 mt-1" id="modal-resumen-texto"></p>
+      </div>
+      <div class="space-y-2 pt-2">
+        <a id="btn-abrir-wa-modal" target="_blank" class="w-full bg-[#25D366] hover:bg-[#20ba59] text-black font-black py-3.5 px-4 rounded-xl text-xs uppercase flex items-center justify-center gap-2 shadow-lg transition">
+          <i class="fa-brands fa-whatsapp text-lg"></i> Enviar Mensaje a WhatsApp
+        </a>
+        <button onclick="cerrarModalExito()" class="w-full bg-brandCard hover:bg-brandHover text-slate-300 font-bold py-2.5 rounded-xl text-xs transition">
+          Volver a la Barbería
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CINTA SUPERIOR -->
+  <aside id="top-info-bar" class="bg-gradient-to-r from-barberRed/20 via-brandSurface to-barberBlue/25 border-b border-blue-500/20 py-1 px-3 text-center text-[11px] text-slate-300 flex items-center justify-center gap-2">
+    <span class="w-2 h-2 rounded-full bg-barberRed animate-ping"></span>
+    <span id="top-info">Sede Valle Grande · Calle 82B # 21-74, Cali · WhatsApp: +57 316 3209216</span>
+  </aside>
+
+  <!-- NAVBAR -->
+  <header class="bg-brandDark/95 backdrop-blur-md border-b border-blue-500/20 sticky top-0 z-40 px-3 sm:px-6 py-2">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div onclick="cambiarPortal('cliente')" class="flex items-center gap-2.5 cursor-pointer">
+        <div class="h-11 w-11 rounded-xl bg-[#0c1628] border border-blue-500/30 flex items-center justify-center p-1 shadow-md" id="logo-render">
+          <!-- Logo SVG por defecto -->
+          <div class="flex items-center gap-1 px-1">
+            <svg viewBox="0 0 45 80" class="h-9 w-5 flex-shrink-0">
+              <defs><clipPath id="bClipNav"><rect x="7" y="14" width="28" height="52" rx="4"/></clipPath></defs>
+              <rect x="5" y="8" width="32" height="6" rx="3" fill="#fff"/>
+              <rect x="5" y="66" width="32" height="6" rx="3" fill="#fff"/>
+              <g clip-path="url(#bClipNav)">
+                <rect x="7" y="14" width="28" height="52" fill="#fff"/>
+                <path d="M-5 10 L45 60 L45 72 L-5 22 Z" fill="#e63946"/>
+                <path d="M-5 32 L45 82 L45 94 L-5 44 Z" fill="#1d4ed8"/>
+                <path d="M-5 -12 L45 38 L45 50 L-5 0 Z" fill="#1d4ed8"/>
+                <path d="M-5 54 L45 104 L45 116 L-5 66 Z" fill="#e63946"/>
+              </g>
+              <rect x="7" y="14" width="28" height="52" rx="4" fill="none" stroke="#fff" stroke-width="2"/>
+            </svg>
+            <div class="leading-none text-left">
+              <span class="font-logo text-white text-sm block -rotate-3">Pepe</span>
+              <span class="font-logo text-white text-[9px] block -rotate-3 border-b border-white pb-0.5">Barber Shop</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h1 id="brand-name" class="text-sm sm:text-base font-black tracking-wider uppercase leading-none">PEPE BARBER SHOP</h1>
+          <p id="brand-sub" class="text-[10px] font-bold text-barberBlueLight tracking-widest uppercase">VALLE GRANDE · CALI</p>
+        </div>
+      </div>
+      <nav class="flex bg-brandSurface p-1 rounded-xl border border-blue-500/20 text-xs font-bold">
+        <button id="btn-tab-cliente" onclick="cambiarPortal('cliente')" class="px-3 py-1.5 rounded-lg bg-barberBlue text-white flex items-center gap-1.5 transition">
+          <i class="fa-regular fa-calendar-check"></i> <span class="hidden sm:inline">Reservar</span>
+        </button>
+        <button id="btn-tab-tv" onclick="cambiarPortal('tv')" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-tv"></i> <span class="hidden sm:inline">Pantalla TV</span>
+        </button>
+        <button id="btn-tab-barbero" onclick="cambiarPortal('barbero')" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-user-shield"></i> <span class="hidden sm:inline">Empleados</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- PORTAL 1: CLIENTES -->
+  <main id="portal-cliente" class="max-w-xl w-full mx-auto p-4 flex-1 space-y-4">
+    <div class="grid grid-cols-4 gap-1.5 text-center text-[11px] font-bold">
+      <div id="st-1" class="py-2 rounded-lg bg-brandSurface border border-barberRed text-white">1. Servicio</div>
+      <div id="st-2" class="py-2 rounded-lg bg-brandSurface border border-blue-500/20 text-slate-500">2. Barbero</div>
+      <div id="st-3" class="py-2 rounded-lg bg-brandSurface border border-blue-500/20 text-slate-500">3. Turno</div>
+      <div id="st-4" class="py-2 rounded-lg bg-brandSurface border border-blue-500/20 text-slate-500">4. Confirmar</div>
+    </div>
+
+    <!-- PASO 1 -->
+    <section id="step-1" class="space-y-3">
+      <div>
+        <h2 class="text-lg font-black uppercase tracking-wide">Elige tu Servicio</h2>
+        <p class="text-xs text-slate-400">Puedes seleccionar uno o varios servicios.</p>
+      </div>
+      <div id="services-list" class="space-y-2"></div>
+      <button onclick="validarPaso(1)" class="w-full bg-barberRed hover:bg-red-600 font-extrabold py-3.5 px-4 rounded-xl text-xs uppercase tracking-wider flex justify-between items-center shadow-lg transition">
+        <span>Continuar a Barbero</span><span id="subtotal-chip" class="bg-black/30 px-2 py-0.5 rounded text-[11px]">$0 COP</span>
+      </button>
+    </section>
+
+    <!-- PASO 2 -->
+    <section id="step-2" class="space-y-3 hidden">
+      <div>
+        <h2 class="text-lg font-black uppercase tracking-wide">Elige tu Barbero</h2>
+        <p class="text-xs text-slate-400">Guíate por el nombre o la foto del peluquero.</p>
+      </div>
+      <div id="barbers-list" class="space-y-2.5"></div>
+      <div class="flex gap-2">
+        <button onclick="irPaso(1)" class="w-1/3 bg-brandSurface border border-blue-500/20 font-bold py-3 rounded-xl text-xs text-slate-300">Atrás</button>
+        <button onclick="validarPaso(2)" class="w-2/3 bg-barberRed hover:bg-red-600 font-extrabold py-3 rounded-xl text-xs uppercase tracking-wider transition">Continuar a Fecha</button>
+      </div>
+    </section>
+
+    <!-- PASO 3 -->
+    <section id="step-3" class="space-y-3 hidden">
+      <div>
+        <h2 class="text-lg font-black uppercase tracking-wide">Fecha y Horario</h2>
+        <p class="text-xs text-slate-400">Agenda permitida únicamente hasta con <strong>2 días de anticipación</strong>.</p>
+      </div>
+      <div id="date-pills" class="grid grid-cols-3 gap-2"></div>
+      <div class="text-xs font-bold text-slate-300">Horarios disponibles con <span id="slots-barber-name" class="text-barberBlueLight">Pepe</span>:</div>
+      <div id="slots-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-56 overflow-y-auto pr-1"></div>
+      <div class="flex gap-2">
+        <button onclick="irPaso(2)" class="w-1/3 bg-brandSurface border border-blue-500/20 font-bold py-3 rounded-xl text-xs text-slate-300">Atrás</button>
+        <button onclick="validarPaso(3)" class="w-2/3 bg-barberRed hover:bg-red-600 font-extrabold py-3 rounded-xl text-xs uppercase tracking-wider transition">Revisar Reserva</button>
+      </div>
+    </section>
+
+    <!-- PASO 4 -->
+    <section id="step-4" class="space-y-3 hidden">
+      <div>
+        <h2 class="text-lg font-black uppercase tracking-wide">Confirmar Turno</h2>
+        <p class="text-xs text-slate-400">Verifica los datos antes de agendar tu cupo.</p>
+      </div>
+      <div class="bg-brandSurface border border-blue-500/20 rounded-xl p-3.5 space-y-2 text-xs">
+        <div class="flex justify-between border-b border-blue-500/10 pb-1.5"><span class="text-slate-400">Servicios:</span><span id="sum-srv" class="font-bold text-right max-w-xs"></span></div>
+        <div class="flex justify-between border-b border-blue-500/10 pb-1.5"><span class="text-slate-400">Barbero:</span><span id="sum-barb" class="font-bold text-barberBlueLight"></span></div>
+        <div class="flex justify-between border-b border-blue-500/10 pb-1.5"><span class="text-slate-400">Fecha y Hora:</span><span id="sum-date" class="font-bold"></span></div>
+        <div class="flex justify-between pt-1 text-sm font-black"><span class="text-slate-300">Total a Pagar:</span><span id="sum-total" class="text-barberRed">$0 COP</span></div>
+      </div>
+      <form onsubmit="confirmarReserva(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Nombre Completo *</label>
+          <input type="text" id="client-name" required minlength="3" placeholder="Tu nombre" class="w-full bg-brandSurface border border-blue-500/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-barberBlue">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">WhatsApp (10 dígitos) *</label>
+          <input type="tel" id="client-phone" required pattern="[0-9]{10}" placeholder="310 123 4567" class="w-full bg-brandSurface border border-blue-500/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-barberBlue">
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="irPaso(3)" class="w-1/3 bg-brandSurface border border-blue-500/20 font-bold py-3 rounded-xl text-xs text-slate-300">Atrás</button>
+          <button type="submit" class="w-2/3 bg-green-600 hover:bg-green-500 font-extrabold py-3 rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition shadow-lg">
+            <i class="fa-brands fa-whatsapp text-base"></i> Confirmar Cita
+          </button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <!-- PORTAL 2: TRANSMISIÓN TV -->
+  <main id="portal-tv" class="max-w-7xl w-full mx-auto p-3 sm:p-5 flex-1 flex flex-col justify-between hidden pb-16">
+    <div class="bg-brandSurface border border-blue-500/20 rounded-2xl px-5 py-3 flex justify-between items-center mb-3">
+      <div class="flex items-center gap-3">
+        <div id="tv-logo-spot" class="h-10 w-10 flex items-center justify-center rounded-xl bg-brandDark p-1 border border-blue-500/20"></div>
+        <div>
+          <span class="text-[10px] font-black uppercase tracking-widest text-barberBlueLight flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-barberRed animate-ping"></span> SALA DE ESPERA · EN VIVO
+          </span>
+          <h2 class="text-lg sm:text-xl font-black uppercase tracking-tight leading-none mt-0.5">Turnero Pepe Barber Shop</h2>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right font-mono">
+          <div id="tv-clock" class="text-2xl sm:text-3xl font-black leading-none">--:--:--</div>
+          <div id="tv-date" class="text-[10px] text-slate-400 uppercase font-sans mt-0.5">--</div>
+        </div>
+        <button id="btn-fs" onclick="togglePantallaCompleta()" class="bg-brandCard hover:bg-brandHover border border-blue-500/30 p-2.5 rounded-xl text-sm" title="Pantalla completa">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 flex-1 items-stretch">
+      <div class="lg:col-span-7 flex flex-col justify-between space-y-2.5">
+        <h3 class="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-chair text-barberBlue"></i> EN ATENCIÓN AHORA (EN LA SILLA)
+        </h3>
+        <div id="tv-chairs" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 flex-1"></div>
+      </div>
+      <div class="lg:col-span-5 bg-brandSurface border border-blue-500/20 rounded-2xl p-3.5 flex flex-col">
+        <div class="flex justify-between items-center mb-2 pb-2 border-b border-blue-500/20">
+          <h3 class="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-clock-rotate-left text-barberBlueLight"></i> PRÓXIMOS TURNOS
+          </h3>
+          <span id="tv-waiting-count" class="text-[10px] font-bold bg-barberBlue/20 text-barberBlueLight px-2 py-0.5 rounded-md">0 en espera</span>
+        </div>
+        <div id="tv-queue-cards" class="space-y-2 overflow-y-auto max-h-[380px] flex-1 pr-1"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- PORTAL 3: LOGIN & PANEL EMPLEADOS -->
+  <main id="portal-barbero" class="max-w-xl w-full mx-auto p-4 flex-1 space-y-4 hidden">
+    <div id="pin-screen" class="text-center py-10 space-y-3">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-brandSurface border border-barberBlue flex items-center justify-center text-barberBlueLight text-2xl shadow-lg">
+        <i class="fa-solid fa-user-lock"></i>
+      </div>
+      <h2 class="text-lg font-black uppercase tracking-wide">Portal de Empleados</h2>
+      <p class="text-xs text-slate-400">Ingreso restringido para el equipo de trabajo</p>
+      <form onsubmit="authAdmin(event)" class="max-w-xs mx-auto space-y-3 pt-2 text-left">
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Usuario</label>
+          <input type="text" id="login-user" required placeholder="Usuario" class="w-full bg-brandSurface border border-blue-500/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-barberBlue">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Contraseña</label>
+          <input type="password" id="login-pass" required placeholder="••••••••" class="w-full bg-brandSurface border border-blue-500/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-barberBlue">
+        </div>
+        <button type="submit" class="w-full bg-barberBlue hover:bg-blue-600 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition">Ingresar al Sistema</button>
+      </form>
+    </div>
+
+    <div id="admin-panel" class="space-y-4 hidden">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-base font-black uppercase">Administrador General</h2>
+          <p class="text-[11px] text-slate-400">Control de citas, fotos de barberos y precios.</p>
+        </div>
+        <button onclick="logoutAdmin()" class="bg-brandSurface border border-blue-500/20 text-slate-400 text-xs px-3 py-1.5 rounded-lg hover:text-white">Cerrar Sesión</button>
+      </div>
+
+      <div class="flex bg-brandSurface p-1 rounded-xl border border-blue-500/20 text-xs font-bold gap-1 overflow-x-auto">
+        <button id="sub-turnos" onclick="subTab('turnos')" class="px-3 py-1.5 rounded-lg bg-barberBlue text-white whitespace-nowrap">Turnos</button>
+        <button id="sub-servicios" onclick="subTab('servicios')" class="px-3 py-1.5 rounded-lg text-slate-400 whitespace-nowrap">Servicios & Precios</button>
+        <button id="sub-barberos" onclick="subTab('barberos')" class="px-3 py-1.5 rounded-lg text-slate-400 whitespace-nowrap">Equipo Barberos</button>
+        <button id="sub-config" onclick="subTab('config')" class="px-3 py-1.5 rounded-lg text-slate-400 whitespace-nowrap">Seguridad & Config</button>
+      </div>
+
+      <!-- Turnos -->
+      <div id="sec-turnos" class="space-y-3">
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-brandSurface border border-blue-500/20 p-3 rounded-xl"><span class="text-slate-400 uppercase font-bold text-[10px]">Citas Hoy</span><p id="adm-count" class="text-lg font-black mt-1">0</p></div>
+          <div class="bg-brandSurface border border-blue-500/20 p-3 rounded-xl"><span class="text-slate-400 uppercase font-bold text-[10px]">Caja Estimada</span><p id="adm-caja" class="text-lg font-black text-barberBlueLight mt-1">$0</p></div>
+        </div>
+        <div id="admin-citas-list" class="space-y-2"></div>
+      </div>
+
+      <!-- Servicios -->
+      <div id="sec-servicios" class="space-y-3 hidden">
+        <form onsubmit="addServicio(event)" class="bg-brandSurface border border-blue-500/20 p-3 rounded-xl space-y-2 text-xs">
+          <span class="font-bold text-slate-300 uppercase block">Agregar Nuevo Servicio</span>
+          <input type="text" id="add-srv-name" required placeholder="Nombre (ej: Corte + Barba)" class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="number" id="add-srv-price" required placeholder="Precio COP (ej: 25000)" class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2">
+            <input type="text" id="add-srv-dur" required placeholder="Duración (ej: 40 min)" class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2">
+          </div>
+          <button type="submit" class="w-full bg-barberBlue py-2 rounded-lg font-bold uppercase text-[11px]">Guardar Servicio</button>
+        </form>
+        <div id="cms-srv-list" class="space-y-2"></div>
+      </div>
+
+      <!-- Barberos -->
+      <div id="sec-barberos" class="space-y-4 hidden">
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold text-xs uppercase text-slate-200">Equipo Actual de Barberos</h3>
+            <span class="text-[10px] text-slate-400">Toca "📷 Foto" para asignar imagen</span>
+          </div>
+          <div id="cms-barb-list" class="space-y-2.5"></div>
+        </div>
+
+        <div class="bg-brandSurface border border-blue-500/20 p-3.5 rounded-xl space-y-2 text-xs pt-3 mt-4">
+          <span class="font-bold text-slate-300 uppercase block">Agregar Nuevo Barbero al Negocio</span>
+          <form onsubmit="addBarbero(event)" class="space-y-2">
+            <input type="text" id="add-barb-name" required placeholder="Nombre del barbero" class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="add-barb-rol" required placeholder="Especialidad (ej: Fade)" class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2">
+              <input type="text" id="add-barb-rat" required value="5.0" placeholder="Rating (ej: 5.0)" class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 font-bold mb-1">Foto del Barbero (Opcional):</label>
+              <input type="file" id="add-barb-foto" accept="image/*" class="w-full text-slate-400 text-[11px]">
+            </div>
+            <button type="submit" class="w-full bg-barberBlue hover:bg-blue-600 py-2 rounded-lg font-bold uppercase text-[11px] mt-1">Guardar Barbero</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Configuración -->
+      <div id="sec-config" class="space-y-3 hidden">
+        <div class="bg-brandSurface border border-blue-500/20 p-3.5 rounded-xl space-y-3 text-xs">
+          <h3 class="font-bold text-sm uppercase text-slate-200">Foto o Imagen del Logo del Negocio</h3>
+          <div class="flex items-center gap-3">
+            <div id="preview-logo-box" class="w-16 h-16 rounded-xl bg-brandDark border border-blue-500/30 flex items-center justify-center overflow-hidden p-1"></div>
+            <div class="flex-1 space-y-1.5">
+              <input type="file" id="logo-file-input" accept="image/*" onchange="subirArchivoLogo(event)" class="hidden">
+              <button type="button" onclick="document.getElementById('logo-file-input').click()" class="w-full bg-barberBlue py-2 rounded-lg font-bold text-xs uppercase flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Cambiar Imagen de Logo
+              </button>
+              <div class="flex gap-2">
+                <button type="button" onclick="toggleMirrorLogo()" class="w-1/2 bg-brandCard border border-blue-500/20 py-1.5 rounded-lg text-[10px] font-bold">Voltear (Espejo)</button>
+                <button type="button" onclick="resetearLogoDefault()" class="w-1/2 bg-brandCard border border-blue-500/20 py-1.5 rounded-lg text-[10px] text-red-400 font-bold">Quitar foto</button>
+              </div>
+            </div>
+          </div>
+
+          <form onsubmit="saveConfig(event)" class="space-y-2.5 pt-3 border-t border-blue-500/20">
+            <h4 class="font-bold text-xs uppercase text-barberBlueLight">Seguridad y Credenciales de Acceso</h4>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px]">Usuario Empleados</label>
+                <input type="text" id="cfg-user" required class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2 font-bold">
+              </div>
+              <div>
+                <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px]">Contraseña Empleados</label>
+                <input type="text" id="cfg-pass" required class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2 font-bold">
+              </div>
+            </div>
+            <h4 class="font-bold text-xs uppercase text-barberBlueLight pt-2">Datos del Local</h4>
+            <div>
+              <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px]">Nombre del Negocio</label>
+              <input type="text" id="cfg-name" required class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2 font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px]">Dirección / Sede</label>
+              <input type="text" id="cfg-sede" required class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2">
+            </div>
+            <div>
+              <label class="block text-slate-400 font-bold mb-1 uppercase text-[10px]">WhatsApp Receptor (con código 57)</label>
+              <input type="tel" id="cfg-wa" required class="w-full bg-brandDark border border-blue-500/20 rounded-lg p-2">
+            </div>
+            <button type="submit" class="w-full bg-barberBlue hover:bg-blue-600 py-2.5 rounded-lg font-bold uppercase text-[11px] mt-1">Guardar Todos los Cambios</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- CINTILLO FÚTBOL EN VIVO -->
+  <aside id="ticker-bar" class="fixed bottom-0 left-0 right-0 h-12 bg-[#050b14] border-t-2 border-barberRed flex items-center z-50 overflow-hidden shadow-2xl hidden">
+    <div class="bg-barberRed text-white font-black text-xs uppercase h-full px-4 flex items-center gap-1.5 flex-shrink-0 z-10">
+      <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span> <i class="fa-solid fa-futbol"></i> FÚTBOL EN VIVO
+    </div>
+    <div class="ticker-track text-xs font-bold text-slate-200" id="ticker-track">
+      <div class="inline-flex items-center gap-2 px-6"><span>Cargando marcadores oficiales...</span></div>
+    </div>
+  </aside>
+
+  <!-- JS LIMPIO Y SIN ERRORES -->
+  <script>
+    const SRV_DEF = [
+      { id: '1', nombre: 'Corte en general', duracion: '40 min', precio: 20000 },
+      { id: '2', nombre: 'Candado', duracion: '20 min', precio: 8000 },
+      { id: '3', nombre: 'Mickey', duracion: '15 min', precio: 5000 },
+      { id: '4', nombre: 'Cejas damas', duracion: '15 min', precio: 4000 },
+      { id: '5', nombre: 'Cejas hombre', duracion: '15 min', precio: 4000 },
+      { id: '6', nombre: 'Corte más candado', duracion: '50 min', precio: 25000 },
+      { id: '7', nombre: 'Corte más barba sencilla', duracion: '55 min', precio: 25000 },
+      { id: '8', nombre: 'Corte más mascarilla', duracion: '55 min', precio: 25000 },
+      { id: '9', nombre: 'Líneas', duracion: '10 min', precio: 2000 }
+    ];
+
+    const BARB_DEF = [
+      { id: 'pepe', nombre: 'Pepe', rol: 'Master Barber & Fundador', rating: '5.0', foto: null },
+      { id: 'javier', nombre: 'Javier', rol: 'Fade Specialist', rating: '4.9', foto: null },
+      { id: 'jhon', nombre: 'Jhon', rol: 'Barba & Ritual', rating: '4.9', foto: null }
+    ];
+
+    const CFG_DEF = {
+      nombre: "PEPE BARBER SHOP", sede: "Calle 82B # 21-74, Cali", whatsapp: "573163209216",
+      adminUser: "barbero", adminPass: "pepe2026", customLogo: null, mirrorLogo: false
+    };
+
+    const HORARIOS = [
+      "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
+      "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM",
+      "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM",
+      "05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM",
+      "08:00 PM", "08:30 PM"
+    ];
+
+    const COP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+
+    function getSrv() { return JSON.parse(localStorage.getItem('pepe_srv')) || SRV_DEF; }
+    function getBarb() { return JSON.parse(localStorage.getItem('pepe_barb')) || BARB_DEF; }
+    function getCfg() { return JSON.parse(localStorage.getItem('pepe_cfg')) || CFG_DEF; }
+
+    function getLocalTodayISO(d = new Date()) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function slotToMinutes(str) {
+      const parts = str.trim().split(' ');
+      const timeParts = parts[0].split(':');
+      let hours = parseInt(timeParts[0], 10);
+      const minutes = parseInt(timeParts[1], 10);
+      if (parts[1].toUpperCase() === 'PM' && hours < 12) hours += 12;
+      if (parts[1].toUpperCase() === 'AM' && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    }
+
+    let srvSel = [], barbSel = null, dateSel = '', hourSel = '', tickerInterval = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      syncUI(); renderLogoEnApp(); renderServicios(); renderBarberos(); genDatePills(); initReloj(); renderTV();
+      window.addEventListener('storage', () => {
+        renderTV(); syncUI(); renderLogoEnApp(); renderBarberos();
+        if (sessionStorage.getItem('pepe_admin') === 'true') { renderAdmin(); renderCmsServicios(); renderCmsBarberos(); }
+      });
+      document.addEventListener('fullscreenchange', actualizarIconoFS);
+      document.addEventListener('webkitfullscreenchange', actualizarIconoFS);
+    });
+
+    function renderLogoEnApp() {
+      const cfg = getCfg();
+      const mirror = cfg.mirrorLogo ? 'transform: scaleX(-1);' : '';
+      let html = '';
+      if (cfg.customLogo) {
+        html = `<img src="${cfg.customLogo}" style="${mirror}" class="h-full w-full object-contain" alt="Logo">`;
+      } else {
+        html = `
+          <div style="${mirror}" class="flex items-center gap-1 px-1">
+            <svg viewBox="0 0 45 80" class="h-9 w-5 flex-shrink-0">
+              <defs><clipPath id="bClip"><rect x="7" y="14" width="28" height="52" rx="4"/></clipPath></defs>
+              <rect x="5" y="8" width="32" height="6" rx="3" fill="#fff"/><rect x="5" y="66" width="32" height="6" rx="3" fill="#fff"/>
+              <g clip-path="url(#bClip)">
+                <rect x="7" y="14" width="28" height="52" fill="#fff"/>
+                <path d="M-5 10 L45 60 L45 72 L-5 22 Z" fill="#e63946"/><path d="M-5 32 L45 82 L45 94 L-5 44 Z" fill="#1d4ed8"/>
+                <path d="M-5 -12 L45 38 L45 50 L-5 0 Z" fill="#1d4ed8"/><path d="M-5 54 L45 104 L45 116 L-5 66 Z" fill="#e63946"/>
+              </g>
+              <rect x="7" y="14" width="28" height="52" rx="4" fill="none" stroke="#fff" stroke-width="2"/>
+            </svg>
+            <div class="leading-none text-left">
+              <span class="font-logo text-white text-sm block -rotate-3">Pepe</span>
+              <span class="font-logo text-white text-[9px] block -rotate-3 border-b border-white pb-0.5">Barber Shop</span>
+            </div>
+          </div>`;
+      }
+      ['logo-render', 'tv-logo-spot', 'preview-logo-box'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
+      });
+    }
+
+    function subirArchivoLogo(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const cfg = getCfg();
+        cfg.customLogo = evt.target.result;
+        localStorage.setItem('pepe_cfg', JSON.stringify(cfg));
+        renderLogoEnApp();
+        alert('¡Foto de logo actualizada con éxito!');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function toggleMirrorLogo() {
+      const cfg = getCfg();
+      cfg.mirrorLogo = !cfg.mirrorLogo;
+      localStorage.setItem('pepe_cfg', JSON.stringify(cfg));
+      renderLogoEnApp();
+    }
+
+    function resetearLogoDefault() {
+      if (confirm('¿Restablecer el logo original?')) {
+        const cfg = getCfg();
+        cfg.customLogo = null;
+        cfg.mirrorLogo = false;
+        localStorage.setItem('pepe_cfg', JSON.stringify(cfg));
+        renderLogoEnApp();
+      }
+    }
+
+    function syncUI() {
+      const cfg = getCfg();
+      document.getElementById('brand-name').innerText = cfg.nombre;
+      document.getElementById('top-info').innerText = `Sede: ${cfg.sede} · WhatsApp: +${cfg.whatsapp}`;
+    }
+
+    function showToast(msg, elemId) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      t.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8');
+      if (elemId) {
+        const el = document.getElementById(elemId);
+        el.classList.add('shake');
+        setTimeout(() => el.classList.remove('shake'), 350);
+      }
+      setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none', 'translate-y-8'), 3000);
+    }
+
+    function renderServicios() {
+      const cont = document.getElementById('services-list');
+      cont.innerHTML = getSrv().map(s => {
+        const sel = srvSel.some(x => x.id === s.id);
+        return `
+          <div onclick="toggleSrv('${s.id}')" class="p-3 rounded-xl border cursor-pointer flex justify-between items-center transition ${sel ? 'border-barberBlue bg-barberBlue/20 shadow-md' : 'border-blue-500/20 bg-brandSurface hover:bg-brandCard'}">
+            <div class="flex items-center gap-2.5">
+              <div class="w-5 h-5 rounded border flex items-center justify-center text-xs ${sel ? 'bg-barberRed border-barberRed text-white font-bold' : 'border-slate-600 bg-brandDark'}">${sel ? '✓' : ''}</div>
+              <div><p class="font-bold text-xs text-white">${s.nombre}</p><p class="text-[10px] text-slate-400">${s.duracion}</p></div>
+            </div>
+            <span class="text-xs font-black text-barberBlueLight">${COP.format(s.precio)}</span>
+          </div>`;
+      }).join('');
+      document.getElementById('subtotal-chip').innerText = COP.format(srvSel.reduce((a, b) => a + b.precio, 0));
+    }
+
+    function toggleSrv(id) {
+      const srvs = getSrv(), idx = srvSel.findIndex(x => x.id === id);
+      if (idx > -1) srvSel.splice(idx, 1); else srvSel.push(srvs.find(x => x.id === id));
+      renderServicios();
+    }
+
+    function renderBarberos() {
+      const cont = document.getElementById('barbers-list');
+      cont.innerHTML = getBarb().map(b => {
+        const sel = barbSel && barbSel.id === b.id;
+        const avatar = b.foto
+          ? `<img src="${b.foto}" class="w-14 h-14 rounded-full object-cover border-2 ${sel ? 'border-barberRed' : 'border-barberBlue'} shadow flex-shrink-0" alt="${b.nombre}">`
+          : `<div class="w-14 h-14 rounded-full bg-brandCard border-2 ${sel ? 'border-barberRed' : 'border-barberBlue'} flex items-center justify-center font-black text-sm text-white flex-shrink-0">${b.nombre.substring(0,2).toUpperCase()}</div>`;
+        return `
+          <div onclick="selBarb('${b.id}')" class="p-3 rounded-xl border cursor-pointer flex justify-between items-center transition ${sel ? 'border-barberRed bg-barberRed/20 shadow-md' : 'border-blue-500/20 bg-brandSurface hover:bg-brandCard'}">
+            <div class="flex items-center gap-3">
+              ${avatar}
+              <div>
+                <p class="font-bold text-sm text-white leading-tight">${b.nombre}</p>
+                <p class="text-[11px] text-slate-300 mt-0.5">${b.rol}</p>
+                <span class="inline-block text-[10px] font-bold text-amber-400 mt-0.5">★ ${b.rating} Calificación</span>
+              </div>
+            </div>
+            <div class="w-6 h-6 rounded-full border ${sel ? 'bg-barberRed border-barberRed text-white' : 'border-slate-600'} flex items-center justify-center text-xs font-bold">${sel ? '✓' : ''}</div>
+          </div>`;
+      }).join('');
+    }
+
+    function selBarb(id) {
+      barbSel = getBarb().find(x => x.id === id);
+      renderBarberos();
+      document.getElementById('slots-barber-name').innerText = barbSel.nombre;
+      renderSlots();
+    }
+
+    function genDatePills() {
+      const cont = document.getElementById('date-pills');
+      const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'], meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      let html = '';
+      for (let i = 0; i <= 2; i++) {
+        const d = new Date(); d.setDate(d.getDate() + i);
+        const iso = getLocalTodayISO(d);
+        let label = (i === 0) ? "Hoy" : (i === 1) ? "Mañana" : dias[d.getDay()];
+        if (i === 0 && !dateSel) dateSel = iso;
+        const act = (dateSel === iso);
+        html += `
+          <div onclick="selDate('${iso}')" class="p-2.5 rounded-xl border text-center cursor-pointer transition ${act ? 'border-barberRed bg-barberRed/25' : 'border-blue-500/20 bg-brandSurface hover:bg-brandCard'}">
+            <span class="block text-[10px] font-bold uppercase text-slate-400">${label}</span>
+            <span class="block text-xs font-black">${d.getDate()} ${meses[d.getMonth()]}</span>
+          </div>`;
+      }
+      cont.innerHTML = html;
+      renderSlots();
+    }
+
+    function selDate(iso) { dateSel = iso; hourSel = ''; genDatePills(); }
+
+    function renderSlots() {
+      if (!barbSel) return;
+      const cont = document.getElementById('slots-grid');
+      const db = JSON.parse(localStorage.getItem('pepe_citas') || '[]');
+      const busy = db.filter(c => c.fecha === dateSel && c.barberoId === barbSel.id && c.estado !== 'cancelado').map(c => c.hora);
+      const esHoy = (dateSel === getLocalTodayISO(new Date()));
+      const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+
+      const slotsValidos = HORARIOS.filter(h => !esHoy || slotToMinutes(h) > nowMin);
+
+      if (slotsValidos.length === 0) {
+        cont.innerHTML = `
+          <div class="col-span-3 sm:col-span-4 p-4 text-center bg-brandSurface rounded-xl border border-blue-500/20 text-slate-400 text-xs">
+            <i class="fa-regular fa-clock text-lg block mb-1 text-barberRed"></i>
+            Ya no quedan turnos disponibles por hoy.<br><strong class="text-white block mt-1">Selecciona "Mañana" o "Pasado Mañana" arriba.</strong>
+          </div>`;
+        return;
+      }
+
+      cont.innerHTML = slotsValidos.map(h => {
+        const isB = busy.includes(h), act = (hourSel === h);
+        if (isB) return `<div class="p-2 rounded-lg bg-brandDark/40 text-slate-600 text-center text-xs line-through select-none cursor-not-allowed">${h}</div>`;
+        return `<button type="button" onclick="selHour('${h}')" class="p-2 rounded-lg border text-center text-xs font-bold transition ${act ? 'bg-barberBlue border-barberBlue text-white shadow' : 'border-blue-500/20 bg-brandSurface text-slate-300 hover:border-barberBlueLight'}">${h}</button>`;
+      }).join('');
+    }
+
+    function selHour(h) { hourSel = h; renderSlots(); }
+
+    function validarPaso(p) {
+      if (p === 1) {
+        if (srvSel.length === 0) return showToast('Elige al menos un servicio.', 'services-list');
+        irPaso(2);
+      } else if (p === 2) {
+        if (!barbSel) return showToast('Elige a tu barbero.', 'barbers-list');
+        irPaso(3);
+      } else if (p === 3) {
+        if (!dateSel || !hourSel) return showToast('Selecciona fecha y hora.', 'slots-grid');
+        prepResumen();
+        irPaso(4);
+      }
+    }
+
+    function irPaso(dest) {
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById(`step-${i}`).classList.add('hidden');
+        const st = document.getElementById(`st-${i}`);
+        st.className = (i < dest) ? 'py-2 rounded-lg bg-brandSurface border border-barberBlue text-barberBlueLight font-bold'
+                      : (i === dest) ? 'py-2 rounded-lg bg-brandSurface border border-barberRed text-white font-bold'
+                      : 'py-2 rounded-lg bg-brandSurface border border-blue-500/20 text-slate-500';
+      }
+      document.getElementById(`step-${dest}`).classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function prepResumen() {
+      document.getElementById('sum-srv').innerText = srvSel.map(x => x.nombre).join(', ');
+      document.getElementById('sum-barb').innerText = `${barbSel.nombre} (${barbSel.rol})`;
+      document.getElementById('sum-date').innerText = `${dateSel} a las ${hourSel}`;
+      document.getElementById('sum-total').innerText = COP.format(srvSel.reduce((a, b) => a + b.precio, 0));
+    }
+
+    function confirmarReserva(e) {
+      e.preventDefault();
+      const cfg = getCfg();
+      const nom = document.getElementById('client-name').value.trim();
+      const tel = document.getElementById('client-phone').value.trim();
+      const tot = srvSel.reduce((a, b) => a + b.precio, 0);
+      const srvs = srvSel.map(x => x.nombre).join(', ');
+
+      const cita = { id: Date.now(), cliente: nom, tel, servicios: srvs, total: tot, barbero: barbSel.nombre, barberoId: barbSel.id, fecha: dateSel, hora: hourSel, estado: 'espera' };
+      const db = JSON.parse(localStorage.getItem('pepe_citas') || '[]');
+      db.push(cita);
+      localStorage.setItem('pepe_citas', JSON.stringify(db));
+
+      const msg = encodeURIComponent(`¡Hola ${cfg.nombre}!\nAcabo de apartar mi cita:\n\n• Cliente: ${nom}\n• Tel: ${tel}\n• Servicios: ${srvs}\n• Barbero: ${cita.barbero}\n• Turno: ${cita.fecha} a las ${cita.hora}\n• Total: ${COP.format(tot)}\n\nSede: ${cfg.sede}`);
+      const urlWA = `https://api.whatsapp.com/send?phone=${cfg.whatsapp}&text=${msg}`;
+
+      document.getElementById('modal-resumen-texto').innerHTML = `<strong>${srvs}</strong> con <strong>${cita.barbero}</strong> el <strong>${cita.fecha}</strong> a las <strong>${cita.hora}</strong>.`;
+      document.getElementById('btn-abrir-wa-modal').href = urlWA;
+      document.getElementById('modal-reserva-exito').classList.remove('hidden');
+
+      try { window.open(urlWA, '_blank'); } catch(err){}
+
+      srvSel = []; barbSel = null; hourSel = '';
+      document.getElementById('client-name').value = '';
+      document.getElementById('client-phone').value = '';
+      renderServicios(); renderBarberos(); renderTV();
+    }
+
+    function cerrarModalExito() { document.getElementById('modal-reserva-exito').classList.add('hidden'); irPaso(1); }
+
+    function initReloj() {
+      setInterval(() => {
+        const d = new Date();
+        const clk = document.getElementById('tv-clock'), dt = document.getElementById('tv-date');
+        if (clk) clk.innerText = d.toLocaleTimeString('es-CO');
+        if (dt) dt.innerText = d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+      }, 1000);
+    }
+
+    function togglePantallaCompleta() {
+      const doc = document, el = doc.documentElement;
+      const isFs = doc.fullscreenElement || doc.webkitFullscreenElement;
+      if (!isFs) { (el.requestFullscreen || el.webkitRequestFullscreen).call(el); }
+      else { (doc.exitFullscreen || doc.webkitExitFullscreen).call(doc); }
+    }
+
+    function actualizarIconoFS() {
+      const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+      const btn = document.getElementById('btn-fs');
+      if (btn) btn.innerHTML = isFs ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>';
+    }
+
+    function playChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.frequency.setValueAtTime(587, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3);
+        g.gain.setValueAtTime(0.35, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.8);
+      } catch (e) {}
+    }
+
+    function renderTV() {
+      const db = JSON.parse(localStorage.getItem('pepe_citas') || '[]');
+      const barbs = getBarb(), hoy = getLocalTodayISO(new Date());
+
+      document.getElementById('tv-chairs').innerHTML = barbs.map(b => {
+        const cur = db.find(c => c.barberoId === b.id && c.estado === 'en_silla');
+        const thumb = b.foto
+          ? `<img src="${b.foto}" class="w-8 h-8 rounded-full object-cover border border-white" alt="${b.nombre}">`
+          : `<div class="w-8 h-8 rounded-full bg-brandCard border border-white flex items-center justify-center font-black text-[10px]">${b.nombre.substring(0,2).toUpperCase()}</div>`;
+
+        if (cur) {
+          return `
+            <div class="bg-brandSurface border-2 border-barberRed p-3 sm:p-4 rounded-xl shadow-lg flex flex-col justify-between">
+              <div>
+                <span class="bg-barberRed text-white text-[9px] font-black px-2 py-0.5 rounded uppercase">EN SILLA AHORA</span>
+                <div class="flex items-center gap-2 mt-2">${thumb}<p class="text-xs font-bold text-barberBlueLight">Barbero: ${b.nombre}</p></div>
+                <h4 class="text-lg sm:text-xl font-black text-white mt-1.5 truncate">${cur.cliente}</h4>
+                <p class="text-[11px] text-slate-300 mt-1 truncate">${cur.servicios}</p>
+              </div>
+              <div class="mt-2 pt-2 border-t border-red-500/30 flex justify-between text-[10px] text-slate-400">
+                <span>Turno: ${cur.hora}</span><span class="text-emerald-400 font-bold">En atención</span>
+              </div>
+            </div>`;
+        }
+        return `
+          <div class="bg-brandSurface border border-blue-500/20 p-3 sm:p-4 rounded-xl flex flex-col justify-between">
+            <div>
+              <span class="bg-slate-800 text-slate-400 text-[9px] font-black px-2 py-0.5 rounded uppercase">SILLA LIBRE</span>
+              <div class="flex items-center gap-2 mt-2">${thumb}<p class="text-xs font-bold text-slate-400">Barbero: ${b.nombre}</p></div>
+              <h4 class="text-base sm:text-lg font-bold text-slate-500 mt-1.5">Disponible</h4>
+              <p class="text-[11px] text-slate-600 mt-1">Listo para cliente</p>
+            </div>
+            <div class="mt-2 pt-2 border-t border-blue-500/10 text-[10px] text-slate-500">Silla desocupada</div>
+          </div>`;
+      }).join('');
+
+      const esp = db.filter(c => c.fecha === hoy && c.estado === 'espera').sort((a,b) => a.hora.localeCompare(b.hora));
+      const cardsCont = document.getElementById('tv-queue-cards');
+      document.getElementById('tv-waiting-count').innerText = `${esp.length} en espera`;
+
+      if (esp.length === 0) {
+        cardsCont.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs">No hay turnos pendientes para hoy.</div>`;
+      } else {
+        cardsCont.innerHTML = esp.map((c, idx) => `
+          <div class="bg-brandCard/60 border border-blue-500/20 p-2.5 rounded-xl flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-full bg-barberBlue/30 text-barberBlueLight font-black text-xs flex items-center justify-center">${idx + 1}</span>
+              <div>
+                <p class="text-xs font-black text-white leading-tight">${c.cliente}</p>
+                <p class="text-[10px] text-slate-400">Con: <strong class="text-slate-300">${c.barbero}</strong> · ${c.servicios}</p>
+              </div>
+            </div>
+            <span class="bg-barberBlue text-white font-mono font-bold text-xs px-2 py-0.5 rounded">${c.hora}</span>
+          </div>`).join('');
+      }
+    }
+
+    async function loadSoccer() {
+      const ligas = [{ c: 'col.1', n: 'LIGA BETPLAY 🇨🇴' }, { c: 'uefa.champions', n: 'CHAMPIONS LEAGUE 🏆' }, { c: 'eng.1', n: 'PREMIER LEAGUE 🏴󠁧󠁢󠁥󠁮󠁧󠁿' }, { c: 'esp.1', n: 'LALIGA 🇪🇸' }];
+      try {
+        const reqs = ligas.map(l =>
+          fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${l.c}/scoreboard`)
+            .then(r => r.json())
+            .then(d => (d.events || []).map(ev => {
+              const cmp = ev.competitions?.[0];
+              const h = cmp?.competitors?.find(x => x.homeAway === 'home');
+              const a = cmp?.competitors?.find(x => x.homeAway === 'away');
+              if (!h || !a) return null;
+              return { liga: l.n, e1: h.team.shortDisplayName || h.team.name, s1: h.score ?? '-', e2: a.team.shortDisplayName || a.team.name, s2: a.score ?? '-', st: ev.status?.type?.shortDetail || 'Final' };
+            }).filter(Boolean)).catch(() => [])
+        );
+        const res = await Promise.all(reqs);
+        let list = res.flat();
+        if (list.length === 0) {
+          list = [
+            { liga: 'LIGA BETPLAY 🇨🇴', e1: 'Millonarios', s1: '2', e2: 'Santa Fe', s2: '1', st: 'Final' },
+            { liga: 'LIGA BETPLAY 🇨🇴', e1: 'América', s1: '1', e2: 'Nacional', s2: '0', st: 'Final' },
+            { liga: 'CHAMPIONS LEAGUE 🏆', e1: 'Real Madrid', s1: '3', e2: 'Man. City', s2: '2', st: 'Final' },
+            { liga: 'PREMIER LEAGUE 🏴󠁧󠁢󠁥󠁮󠁧󠁿', e1: 'Arsenal', s1: '2', e2: 'Chelsea', s2: '1', st: 'Final' }
+          ];
+        }
+        const html = list.map(m => `
+          <div class="inline-flex items-center gap-2 px-8 border-r border-slate-800">
+            <span class="bg-barberBlue text-white text-[9px] px-1.5 py-0.5 rounded font-bold">${m.liga}</span>
+            <span>${m.e1}</span> <span class="text-barberBlueLight font-black">${m.s1} - ${m.s2}</span> <span>${m.e2}</span>
+            <span class="text-slate-400 text-[10px]">(${m.st})</span>
+          </div>`).join('');
+        document.getElementById('ticker-track').innerHTML = html + html;
+      } catch (e) {}
+    }
+
+    function authAdmin(e) {
+      e.preventDefault();
+      const cfg = getCfg();
+      if (document.getElementById('login-user').value.trim() === cfg.adminUser && document.getElementById('login-pass').value.trim() === cfg.adminPass) {
+        sessionStorage.setItem('pepe_admin', 'true');
+        document.getElementById('login-user').value = '';
+        document.getElementById('login-pass').value = '';
+        checkAdmin();
+      } else { alert('Usuario o Contraseña incorrectos.'); }
+    }
+
+    function checkAdmin() {
+      const ok = sessionStorage.getItem('pepe_admin') === 'true';
+      document.getElementById('pin-screen').classList.toggle('hidden', ok);
+      document.getElementById('admin-panel').classList.toggle('hidden', !ok);
+      if (ok) { renderAdmin(); renderCmsServicios(); renderCmsBarberos(); }
+    }
+
+    function logoutAdmin() { sessionStorage.removeItem('pepe_admin'); checkAdmin(); }
+
+    function subTab(t) {
+      ['turnos', 'servicios', 'barberos', 'config'].forEach(x => {
+        document.getElementById(`sec-${x}`).classList.add('hidden');
+        document.getElementById(`sub-${x}`).className = 'px-3 py-1.5 rounded-lg text-slate-400 whitespace-nowrap';
+      });
+      document.getElementById(`sec-${t}`).classList.remove('hidden');
+      document.getElementById(`sub-${t}`).className = 'px-3 py-1.5 rounded-lg bg-barberBlue text-white whitespace-nowrap font-bold';
+      if (t === 'servicios') renderCmsServicios();
+      if (t === 'barberos') renderCmsBarberos();
+      if (t === 'config') loadCfgForm();
+      if (t === 'turnos') renderAdmin();
+    }
+
+    function renderAdmin() {
+      const db = JSON.parse(localStorage.getItem('pepe_citas') || '[]');
+      const hoy = getLocalTodayISO(new Date());
+      const citasHoy = db.filter(c => c.fecha === hoy && c.estado !== 'cancelado');
+      document.getElementById('adm-count').innerText = citasHoy.length;
+
+      const caja = db.filter(c => c.estado === 'completado' || c.estado === 'en_silla').reduce((a, b) => a + Number(b.total), 0);
+      document.getElementById('adm-caja').innerText = COP.format(caja);
+
+      const cont = document.getElementById('admin-citas-list');
+      const act = db.filter(c => c.estado !== 'cancelado').sort((a,b) => new Date(`${a.fecha}T${a.hora}`) - new Date(`${b.fecha}T${b.hora}`));
+
+      if (act.length === 0) {
+        cont.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs">No hay citas registradas.</div>`;
+        return;
+      }
+      cont.innerHTML = act.map(c => `
+        <div class="bg-brandSurface border border-blue-500/20 p-3 rounded-xl flex justify-between items-center text-xs">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-mono font-bold text-barberBlueLight">${c.hora}</span><span class="text-slate-400">${c.fecha}</span>
+              <span class="bg-barberBlue px-1.5 py-0.2 rounded text-[10px]">${c.barbero}</span>
+            </div>
+            <p class="font-bold text-white">${c.cliente} <span class="text-slate-400 font-normal">(${c.tel})</span></p>
+            <p class="text-[11px] text-slate-400">${c.servicios} · <strong>${COP.format(c.total)}</strong></p>
+          </div>
+          <div class="flex gap-1.5">
+            ${c.estado === 'espera' ? `<button onclick="chgCita(${c.id}, 'en_silla')" class="bg-barberRed px-2.5 py-1.5 rounded-lg font-bold text-[11px]"><i class="fa-solid fa-bell"></i> Silla</button>` : ''}
+            ${c.estado === 'en_silla' ? `<button onclick="chgCita(${c.id}, 'completado')" class="bg-green-600 px-2.5 py-1.5 rounded-lg font-bold text-[11px]"><i class="fa-solid fa-check"></i> Listo</button>` : ''}
+            <button onclick="delCita(${c.id})" class="text-red-400 px-2 py-1"><i class="fa-regular fa-trash-can"></i></button>
+          </div>
+        </div>`).join('');
+    }
+
+    function chgCita(id, st) {
+      let db = JSON.parse(localStorage.getItem('pepe_citas') || '[]');
+      db = db.map(c => c.id === id ? { ...c, estado: st } : c);
+      localStorage.setItem('pepe_citas', JSON.stringify(db));
+      if (st === 'en_silla') playChime();
+      renderAdmin(); renderTV();
+    }
+
+    function delCita(id) {
+      if (confirm('¿Cancelar esta cita?')) {
+        let db = JSON.parse(localStorage.getItem('pepe_citas') || '[]').filter(c => c.id !== id);
+        localStorage.setItem('pepe_citas', JSON.stringify(db));
+        renderAdmin(); renderTV();
+      }
+    }
+
+    function renderCmsServicios() {
+      document.getElementById('cms-srv-list').innerHTML = getSrv().map(s => `
+        <div class="bg-brandSurface border border-blue-500/20 p-2.5 rounded-xl flex justify-between items-center text-xs">
+          <div><p class="font-bold">${s.nombre}</p><p class="text-slate-400 text-[10px]">${s.duracion} · <span class="text-barberBlueLight font-bold">${COP.format(s.precio)}</span></p></div>
+          <button onclick="delSrv('${s.id}')" class="text-red-400 px-2"><i class="fa-solid fa-trash"></i></button>
+        </div>`).join('');
+    }
+
+    function addServicio(e) {
+      e.preventDefault();
+      const s = getSrv();
+      s.push({ id: String(Date.now()), nombre: document.getElementById('add-srv-name').value.trim(), precio: Number(document.getElementById('add-srv-price').value), duracion: document.getElementById('add-srv-dur').value.trim() });
+      localStorage.setItem('pepe_srv', JSON.stringify(s));
+      e.target.reset(); renderCmsServicios(); renderServicios();
+    }
+
+    function delSrv(id) {
+      if (confirm('¿Eliminar servicio?')) {
+        localStorage.setItem('pepe_srv', JSON.stringify(getSrv().filter(x => x.id !== id)));
+        renderCmsServicios(); renderServicios();
+      }
+    }
+
+    function renderCmsBarberos() {
+      document.getElementById('cms-barb-list').innerHTML = getBarb().map(b => {
+        const thumb = b.foto
+          ? `<img src="${b.foto}" class="w-12 h-12 rounded-full object-cover border-2 border-barberBlue flex-shrink-0" alt="${b.nombre}">`
+          : `<div class="w-12 h-12 rounded-full bg-brandCard border-2 border-barberBlue flex items-center justify-center font-bold text-xs flex-shrink-0">${b.nombre.substring(0,2).toUpperCase()}</div>`;
+        return `
+          <div class="bg-brandSurface border border-blue-500/20 p-3 rounded-xl flex justify-between items-center text-xs">
+            <div class="flex items-center gap-3">
+              ${thumb}
+              <div>
+                <p class="font-bold text-sm text-white">${b.nombre}</p>
+                <p class="text-slate-300 text-[11px]">${b.rol}</p>
+                <span class="text-[10px] text-amber-400">★ ${b.rating} Calificación</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <input type="file" id="input-foto-${b.id}" accept="image/*" onchange="asignarFotoDirecta('${b.id}', this)" class="hidden">
+              <button type="button" onclick="document.getElementById('input-foto-${b.id}').click()" class="bg-barberBlue hover:bg-blue-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow">
+                <i class="fa-solid fa-camera"></i> Foto
+              </button>
+              ${b.foto ? `<button type="button" onclick="quitarFotoBarbero('${b.id}')" title="Quitar foto" class="bg-brandCard hover:bg-red-950/60 text-red-400 p-1.5 rounded-lg border border-red-500/20 text-xs"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+              <button onclick="delBarb('${b.id}')" title="Eliminar barbero" class="text-slate-500 hover:text-red-400 p-1.5 ml-1"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function asignarFotoDirecta(id, input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const barbs = getBarb().map(b => b.id === id ? { ...b, foto: evt.target.result } : b);
+        localStorage.setItem('pepe_barb', JSON.stringify(barbs));
+        renderCmsBarberos(); renderBarberos(); renderTV();
+        alert('¡Foto guardada correctamente!');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function quitarFotoBarbero(id) {
+      if (confirm('¿Quitar foto?')) {
+        const barbs = getBarb().map(b => b.id === id ? { ...b, foto: null } : b);
+        localStorage.setItem('pepe_barb', JSON.stringify(barbs));
+        renderCmsBarberos(); renderBarberos(); renderTV();
+      }
+    }
+
+    function addBarbero(e) {
+      e.preventDefault();
+      const nombre = document.getElementById('add-barb-name').value.trim();
+      const rol = document.getElementById('add-barb-rol').value.trim();
+      const rating = document.getElementById('add-barb-rat').value.trim();
+      const file = document.getElementById('add-barb-foto').files[0];
+
+      const save = (fData) => {
+        const b = getBarb();
+        b.push({ id: String(Date.now()), nombre, rol, rating, foto: fData });
+        localStorage.setItem('pepe_barb', JSON.stringify(b));
+        e.target.reset(); renderCmsBarberos(); renderBarberos(); renderTV();
+        alert('¡Barbero añadido con éxito!');
+      };
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => save(evt.target.result);
+        reader.readAsDataURL(file);
+      } else { save(null); }
+    }
+
+    function delBarb(id) {
+      if (confirm('¿Eliminar barbero?')) {
+        localStorage.setItem('pepe_barb', JSON.stringify(getBarb().filter(x => x.id !== id)));
+        renderCmsBarberos(); renderBarberos(); renderTV();
+      }
+    }
+
+    function loadCfgForm() {
+      const cfg = getCfg();
+      document.getElementById('cfg-user').value = cfg.adminUser || 'barbero';
+      document.getElementById('cfg-pass').value = cfg.adminPass || 'pepe2026';
+      document.getElementById('cfg-name').value = cfg.nombre;
+      document.getElementById('cfg-sede').value = cfg.sede;
+      document.getElementById('cfg-wa').value = cfg.whatsapp;
+    }
+
+    function saveConfig(e) {
+      e.preventDefault();
+      const cfg = getCfg();
+      cfg.adminUser = document.getElementById('cfg-user').value.trim();
+      cfg.adminPass = document.getElementById('cfg-pass').value.trim();
+      cfg.nombre = document.getElementById('cfg-name').value.trim();
+      cfg.sede = document.getElementById('cfg-sede').value.trim();
+      cfg.whatsapp = document.getElementById('cfg-wa').value.trim();
+      localStorage.setItem('pepe_cfg', JSON.stringify(cfg));
+      syncUI(); alert('¡Configuración guardada!');
+    }
+
+    function cambiarPortal(p) {
+      ['cliente', 'tv', 'barbero'].forEach(x => {
+        document.getElementById(`portal-${x}`).classList.add('hidden');
+        document.getElementById(`btn-tab-${x}`).className = 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white flex items-center gap-1.5 transition';
+      });
+      document.getElementById(`portal-${p}`).classList.remove('hidden');
+      document.getElementById(`btn-tab-${p}`).className = 'px-3 py-1.5 rounded-lg bg-barberBlue text-white flex items-center gap-1.5 transition';
+
+      const ticker = document.getElementById('ticker-bar'), topNotice = document.getElementById('top-info-bar');
+      if (p === 'tv') {
+        ticker.classList.remove('hidden');
+        if (topNotice) topNotice.classList.add('hidden');
+        renderTV(); loadSoccer();
+        if (!tickerInterval) tickerInterval = setInterval(loadSoccer, 60000);
+      } else {
+        ticker.classList.add('hidden');
+        if (topNotice) topNotice.classList.remove('hidden');
+        if (tickerInterval) { clearInterval(tickerInterval); tickerInterval = null; }
+        if (p === 'barbero') checkAdmin();
+      }
+    }
+  </script>
+</body>
+</html>
